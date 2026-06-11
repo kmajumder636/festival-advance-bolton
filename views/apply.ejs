@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apply — Festival Advance Bolton</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<%- include('partials/navbar') %>
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <a href="/dashboard" class="back-link">← Back to Dashboard</a>
+      <h2 class="page-title">Festival Advance Application</h2>
+      <p class="page-sub">Fill in the details carefully. Applications must be submitted by the <strong><%= settings.applyDeadlineDay %><sup>th</sup> of the month</strong>.</p>
+    </div>
+  </div>
+
+  <% if (error) { %>
+  <div class="alert alert-error">
+    <span class="alert-icon">⚠</span> <%= error %>
+  </div>
+  <% } %>
+  <% if (success) { %>
+  <div class="alert alert-success">
+    <span class="alert-icon">✓</span> <%= success %>
+  </div>
+  <% } %>
+
+  <div class="form-layout">
+    <!-- Left: Form -->
+    <div class="form-main">
+      <form action="/apply" method="POST" id="applyForm" novalidate>
+        <!-- Employee Details (Read-only) -->
+        <div class="form-card">
+          <div class="form-card-header">
+            <span class="form-section-num">1</span>
+            <h3>Employee Details</h3>
+          </div>
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label>Staff Number</label>
+              <input type="text" value="<%= user.staffNo %>" disabled class="input-disabled">
+            </div>
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" value="<%= user.name %>" disabled class="input-disabled">
+            </div>
+            <div class="form-group">
+              <label>Designation</label>
+              <input type="text" value="<%= user.designation %>" disabled class="input-disabled">
+            </div>
+            <div class="form-group">
+              <label>Department</label>
+              <input type="text" value="<%= user.dept %>" disabled class="input-disabled">
+            </div>
+            <div class="form-group">
+              <label>Department Code</label>
+              <input type="text" value="<%= user.deptCode %>" disabled class="input-disabled">
+            </div>
+          </div>
+        </div>
+
+        <!-- Advance Details -->
+        <div class="form-card">
+          <div class="form-card-header">
+            <span class="form-section-num">2</span>
+            <h3>Advance Details</h3>
+          </div>
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label for="festival">Festival / Occasion <span class="required">*</span></label>
+              <select id="festival" name="festival" required>
+                <option value="">— Select Festival —</option>
+                <% festivals.forEach(f => { %>
+                <option value="<%= f %>"><%= f %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="month">Month of Advance <span class="required">*</span></label>
+              <select id="month" name="month" required>
+                <option value="">— Select Month —</option>
+                <option>January</option><option>February</option><option>March</option>
+                <option>April</option><option>May</option><option>June</option>
+                <option>July</option><option>August</option><option>September</option>
+                <option>October</option><option>November</option><option>December</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="year">Year <span class="required">*</span></label>
+              <select id="year" name="year" required>
+                <option value="">— Select Year —</option>
+                <% const thisYear = new Date().getFullYear(); %>
+                <option value="<%= thisYear - 1 %>"><%= thisYear - 1 %></option>
+                <option value="<%= thisYear %>" selected><%= thisYear %></option>
+                <option value="<%= thisYear + 1 %>"><%= thisYear + 1 %></option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Advance Summary Box -->
+          <div class="advance-summary">
+            <div class="summary-row">
+              <span>Advance Amount</span>
+              <span class="summary-val">₹<%= settings.amount.toLocaleString('en-IN') %>/-</span>
+            </div>
+            <div class="summary-row">
+              <span>Recovery Instalments</span>
+              <span class="summary-val"><%= settings.installments %> months</span>
+            </div>
+            <div class="summary-row">
+              <span>Monthly Instalment</span>
+              <span class="summary-val">₹<%= instalmentAmt.toLocaleString('en-IN') %>/-</span>
+            </div>
+            <div class="summary-row summary-highlight">
+              <span>Category</span>
+              <span class="summary-val"><%= settings.category %></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bank Details -->
+        <div class="form-card">
+          <div class="form-card-header">
+            <span class="form-section-num">3</span>
+            <h3>Bank Account Details</h3>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="bankAccount">Bank Account Number <span class="required">*</span></label>
+              <input type="text" id="bankAccount" name="bankAccount"
+                placeholder="Enter account number (9-18 digits)"
+                pattern="\d{9,18}" maxlength="18" required
+                oninput="this.value=this.value.replace(/\D/g,'')">
+              <span class="field-hint">Numeric only, 9 to 18 digits</span>
+            </div>
+            <div class="form-group">
+              <label for="ifscCode">IFSC Code <span class="required">*</span></label>
+              <input type="text" id="ifscCode" name="ifscCode"
+                placeholder="e.g. SBIN0001234"
+                pattern="[A-Z]{4}0[A-Z0-9]{6}" maxlength="11" required
+                oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')">
+              <span class="field-hint">Format: XXXX0XXXXXX</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Declaration -->
+        <div class="form-card">
+          <div class="form-card-header">
+            <span class="form-section-num">4</span>
+            <h3>Declaration</h3>
+          </div>
+          <div class="declaration-box">
+            <p>I hereby declare that:</p>
+            <ul>
+              <li>The information furnished above is true and correct to the best of my knowledge.</li>
+              <li>I have not availed Festival Advance for the above festival/month previously in the current year.</li>
+              <li>I agree to the recovery of ₹<%= instalmentAmt.toLocaleString('en-IN') %>/- per month for <%= settings.installments %> consecutive months from my salary.</li>
+              <li>I am aware that this advance is subject to approval by HoD and Finance department.</li>
+              <li>I understand that the advance amount of ₹<%= settings.amount.toLocaleString('en-IN') %>/- will be credited to my registered bank account.</li>
+            </ul>
+          </div>
+          <label class="checkbox-label">
+            <input type="checkbox" name="declaration" value="yes" required id="declCheck">
+            <span>I have read, understood and agree to the above declaration.</span>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <a href="/dashboard" class="btn btn-outline">Cancel</a>
+          <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+            <span class="btn-icon">🪔</span>
+            Submit Application
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Right: Help Panel -->
+    <aside class="form-sidebar">
+      <div class="help-card">
+        <h4 class="help-title">📋 How It Works</h4>
+        <div class="help-steps">
+          <div class="help-step">
+            <span class="step-dot step-active">1</span>
+            <div>
+              <strong>You Apply</strong>
+              <p>Submit by the <%= settings.applyDeadlineDay %><sup>th</sup> of the month</p>
+            </div>
+          </div>
+          <div class="help-step">
+            <span class="step-dot">2</span>
+            <div>
+              <strong>HoD Reviews</strong>
+              <p>HoD approves and forwards to Finance</p>
+            </div>
+          </div>
+          <div class="help-step">
+            <span class="step-dot">3</span>
+            <div>
+              <strong>Finance Sanctions</strong>
+              <p>Sr. Mgr (Finance-Pay) sanctions & exports data</p>
+            </div>
+          </div>
+          <div class="help-step">
+            <span class="step-dot">4</span>
+            <div>
+              <strong>Credit to Account</strong>
+              <p>Amount credited to your bank account</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-card">
+        <h4 class="help-title">💡 Key Points</h4>
+        <ul class="help-list">
+          <li>Advance: <strong>₹<%= settings.amount.toLocaleString('en-IN') %>/-</strong></li>
+          <li>Recovery: <strong><%= settings.installments %> × ₹<%= instalmentAmt.toLocaleString('en-IN') %>/-/month</strong></li>
+          <li>Eligible: <strong>Non-executives only</strong></li>
+          <li>Deadline: <strong><%= settings.applyDeadlineDay %><sup>th</sup> of the month</strong></li>
+          <li>Data submitted by HoD to Finance by <strong>5th</strong> in Excel format</li>
+        </ul>
+      </div>
+
+      <div class="help-card help-card-warn">
+        <h4 class="help-title">⚠ Important</h4>
+        <p>Ensure your bank account and IFSC details are correct. Incorrect details may delay credit. Contact Payroll for corrections after submission.</p>
+      </div>
+    </aside>
+  </div>
+</main>
+<%- include('partials/footer') %>
+<script src="/js/apply.js"></script>
+</body>
+</html>

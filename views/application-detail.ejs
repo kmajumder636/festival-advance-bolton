@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Application Detail — Festival Advance Bolton</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<%- include('partials/navbar') %>
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <a href="/dashboard" class="back-link">← Back to Dashboard</a>
+      <h2 class="page-title">Application Detail</h2>
+      <p class="page-sub">Reference: <span class="mono"><strong><%= app.refNo %></strong></span></p>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.75rem;">
+      <span class="status-badge status-lg status-<%= app.status.replace(/\s+/g,'-').toLowerCase() %>"><%= app.status %></span>
+      <a href="/application/<%= app.id %>/print" class="btn btn-secondary" target="_blank">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+        Print / Save as PDF
+      </a>
+    </div>
+  </div>
+
+  <div class="detail-layout">
+    <div class="detail-main">
+      <!-- Employee Info -->
+      <div class="form-card">
+        <div class="form-card-header"><span class="form-section-num">1</span><h3>Employee Details</h3></div>
+        <div class="detail-grid">
+          <div class="detail-item"><span class="detail-label">Staff Number</span><span class="detail-val mono"><%= app.staffNo %></span></div>
+          <div class="detail-item"><span class="detail-label">Name</span><span class="detail-val"><%= app.staffName %></span></div>
+          <div class="detail-item"><span class="detail-label">Designation</span><span class="detail-val"><%= app.designation %></span></div>
+          <div class="detail-item"><span class="detail-label">Department</span><span class="detail-val"><%= app.dept %></span></div>
+          <div class="detail-item"><span class="detail-label">Dept Code</span><span class="detail-val mono"><%= app.deptCode %></span></div>
+          <div class="detail-item"><span class="detail-label">Applied On</span><span class="detail-val"><%= app.appliedOn %></span></div>
+        </div>
+      </div>
+
+      <!-- Advance Info -->
+      <div class="form-card">
+        <div class="form-card-header"><span class="form-section-num">2</span><h3>Advance Details</h3></div>
+        <div class="detail-grid">
+          <div class="detail-item"><span class="detail-label">Festival</span><span class="detail-val">🎉 <%= app.festival %></span></div>
+          <div class="detail-item"><span class="detail-label">Month / Year</span><span class="detail-val"><%= app.month %> <%= app.year %></span></div>
+          <div class="detail-item"><span class="detail-label">Advance Amount</span><span class="detail-val amount-cell">₹<%= app.amount.toLocaleString('en-IN') %>/-</span></div>
+          <div class="detail-item"><span class="detail-label">Instalments</span><span class="detail-val"><%= app.installments %> × ₹<%= app.installmentAmt %>/-</span></div>
+          <div class="detail-item"><span class="detail-label">Bank Account</span><span class="detail-val mono"><%= app.bankAccount %></span></div>
+          <div class="detail-item"><span class="detail-label">IFSC Code</span><span class="detail-val mono"><%= app.ifscCode %></span></div>
+        </div>
+      </div>
+
+      <!-- Remarks -->
+      <% if (app.hodRemarks || app.financeRemarks) { %>
+      <div class="form-card">
+        <div class="form-card-header"><span class="form-section-num">3</span><h3>Remarks</h3></div>
+        <% if (app.hodRemarks) { %>
+        <div class="remark-item">
+          <span class="remark-by">HoD Remarks</span>
+          <p><%= app.hodRemarks %></p>
+        </div>
+        <% } %>
+        <% if (app.financeRemarks) { %>
+        <div class="remark-item">
+          <span class="remark-by">Finance Remarks</span>
+          <p><%= app.financeRemarks %></p>
+        </div>
+        <% } %>
+      </div>
+      <% } %>
+    </div>
+
+    <!-- Timeline Sidebar -->
+    <aside class="detail-sidebar">
+      <div class="help-card">
+        <h4 class="help-title">📜 Application Timeline</h4>
+        <div class="timeline">
+          <% app.history.forEach((h, i) => { %>
+          <div class="timeline-item <%= i === app.history.length - 1 ? 'timeline-current' : '' %>">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+              <strong><%= h.action %></strong>
+              <span class="timeline-by">by <%= h.by %></span>
+              <span class="timeline-on"><%= h.on %></span>
+              <% if (h.remarks) { %><span class="timeline-remark"><%= h.remarks %></span><% } %>
+            </div>
+          </div>
+          <% }) %>
+        </div>
+      </div>
+
+      <!-- Instalment Schedule -->
+      <div class="help-card">
+        <h4 class="help-title">📅 Recovery Schedule</h4>
+        <div class="schedule-list">
+          <% for (let i = 1; i <= app.installments; i++) { %>
+          <div class="schedule-row">
+            <span>Instalment <%= i %></span>
+            <span>₹<%= app.installmentAmt.toLocaleString('en-IN') %>/-</span>
+          </div>
+          <% } %>
+          <div class="schedule-total">
+            <span>Total Recovery</span>
+            <span>₹<%= app.amount.toLocaleString('en-IN') %>/-</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+<%- include('partials/footer') %>
+</body>
+</html>

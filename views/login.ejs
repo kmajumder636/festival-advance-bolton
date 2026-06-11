@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Festival Advance — Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/main.css">
+</head>
+<body class="login-page">
+  <div class="login-bg">
+    <div class="login-pattern"></div>
+  </div>
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-brand">
+        <img src="/images/sail-logo.jpg" alt="SAIL Logo" class="brand-logo">
+        <h1 class="brand-name">Festival Advance</h1>
+        <p class="brand-company">Steel Authority of India Limited</p>
+        <p class="brand-sub">Employee Welfare System</p>
+      </div>
+      <% if (error) { %>
+      <div class="alert alert-error">
+        <span class="alert-icon">⚠</span> <%= error %>
+      </div>
+      <% } %>
+      <form action="/login" method="POST" class="login-form">
+        <div class="form-group">
+          <label for="staffNo">Staff Number</label>
+          <input type="text" id="staffNo" name="staffNo" placeholder="e.g. EMP001" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">
+          <span>Sign In</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </form>
+
+      <div class="sso-divider"><span>or</span></div>
+
+      <a href="/sso/login" class="btn btn-sso btn-full">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        <span>Sign in with SAIL SSO</span>
+      </a>
+      <p class="sso-hint">Use your corporate Single Sign-On account</p>
+      <div class="demo-creds">
+        <p class="demo-title">Demo Credentials</p>
+        <div class="cred-grid">
+          <div class="cred-item" onclick="fillCreds('EMP001','pass123')">
+            <span class="cred-role">Employee</span>
+            <span class="cred-val">EMP001</span>
+          </div>
+          <div class="cred-item" onclick="fillCreds('HOD001','hod123')">
+            <span class="cred-role">HoD</span>
+            <span class="cred-val">HOD001</span>
+          </div>
+          <div class="cred-item" onclick="fillCreds('MGR001','fin123')">
+            <span class="cred-role">Finance</span>
+            <span class="cred-val">MGR001</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="login-footer">Steel Authority of India Limited · Issued vide Circular dated 22/09/2008</p>
+  </div>
+  <script>
+    function fillCreds(staff, pass) {
+      document.getElementById('staffNo').value = staff;
+      document.getElementById('password').value = pass;
+    }
+  </script>
+</body>
+</html>

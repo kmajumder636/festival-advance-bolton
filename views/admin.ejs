@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Policy Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<%- include('partials/navbar') %>
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Policy Administration</h2>
+      <p class="page-sub">Configure Festival Advance rules · <span class="role-badge role-finance">ADMIN</span></p>
+    </div>
+  </div>
+
+  <% if (saved) { %>
+  <div class="alert alert-success"><span class="alert-icon">✓</span> Policy settings updated successfully. Changes apply to all new applications immediately.</div>
+  <% } %>
+  <% if (error) { %>
+  <div class="alert alert-error"><span class="alert-icon">⚠</span> <%= error %></div>
+  <% } %>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card stat-blue">
+      <div class="stat-icon">📋</div>
+      <div class="stat-body"><div class="stat-value"><%= stats.total %></div><div class="stat-label">Total Applications</div></div>
+    </div>
+    <div class="stat-card stat-amber">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-body"><div class="stat-value"><%= stats.pending %></div><div class="stat-label">Pending</div></div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-icon">✅</div>
+      <div class="stat-body"><div class="stat-value"><%= stats.approved %></div><div class="stat-label">Approved</div></div>
+    </div>
+    <div class="stat-card stat-purple">
+      <div class="stat-icon">💰</div>
+      <div class="stat-body"><div class="stat-value">₹<%= stats.totalDisbursed.toLocaleString('en-IN') %></div><div class="stat-label">Total Disbursed</div></div>
+    </div>
+  </div>
+
+  <div class="form-layout">
+    <div class="form-main">
+      <form action="/admin/settings" method="POST" id="settingsForm">
+        <!-- Advance Configuration -->
+        <div class="form-card">
+          <div class="form-card-header"><span class="form-section-num">1</span><h3>Advance Configuration</h3></div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="amount">Festival Advance Amount (₹) <span class="required">*</span></label>
+              <input type="number" id="amount" name="amount" value="<%= settings.amount %>" min="100" max="999999" required oninput="recalc()">
+              <span class="field-hint">The lump-sum advance credited to the employee</span>
+            </div>
+            <div class="form-group">
+              <label for="installments">Recovery Instalments <span class="required">*</span></label>
+              <input type="number" id="installments" name="installments" value="<%= settings.installments %>" min="1" max="60" required oninput="recalc()">
+              <span class="field-hint">Number of months for salary recovery</span>
+            </div>
+          </div>
+          <div class="advance-summary">
+            <div class="summary-row"><span>Advance Amount</span><span class="summary-val">₹<span id="calcAmount"><%= settings.amount.toLocaleString('en-IN') %></span>/-</span></div>
+            <div class="summary-row"><span>Recovery Instalments</span><span class="summary-val"><span id="calcInst"><%= settings.installments %></span> months</span></div>
+            <div class="summary-row summary-highlight"><span>Monthly Instalment</span><span class="summary-val">₹<span id="calcMonthly"><%= instalmentAmt.toLocaleString('en-IN') %></span>/-</span></div>
+          </div>
+        </div>
+
+        <!-- Application Window -->
+        <div class="form-card">
+          <div class="form-card-header"><span class="form-section-num">2</span><h3>Application Window</h3></div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="applyDeadlineDay">Application Deadline (Day of Month) <span class="required">*</span></label>
+              <input type="number" id="applyDeadlineDay" name="applyDeadlineDay" value="<%= settings.applyDeadlineDay %>" min="1" max="28" required>
+              <span class="field-hint">Employees must apply on or before this day each month</span>
+            </div>
+            <div class="form-group">
+              <label for="category">Eligible Category</label>
+              <select id="category" name="category">
+                <option value="Non-Executive" <%= settings.category === 'Non-Executive' ? 'selected' : '' %>>Non-Executive</option>
+                <option value="Executive" <%= settings.category === 'Executive' ? 'selected' : '' %>>Executive</option>
+                <option value="All Employees" <%= settings.category === 'All Employees' ? 'selected' : '' %>>All Employees</option>
+              </select>
+              <span class="field-hint">Who is eligible for the advance</span>
+            </div>
+          </div>
+          <label class="toggle-row">
+            <span>
+              <strong>Applications Open</strong>
+              <span class="toggle-desc">Master switch — turn off to stop accepting new applications</span>
+            </span>
+            <label class="switch">
+              <input type="checkbox" name="applicationsOpen" <%= settings.applicationsOpen ? 'checked' : '' %>>
+              <span class="slider"></span>
+            </label>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="reset" class="btn btn-outline">Reset</button>
+          <button type="submit" class="btn btn-primary btn-lg">💾 Save Policy</button>
+        </div>
+      </form>
+    </div>
+
+    <aside class="form-sidebar">
+      <div class="help-card">
+        <h4 class="help-title">⚙ Current Policy</h4>
+        <ul class="help-list">
+          <li>Amount: <strong>₹<%= settings.amount.toLocaleString('en-IN') %>/-</strong></li>
+          <li>Instalments: <strong><%= settings.installments %> × ₹<%= instalmentAmt.toLocaleString('en-IN') %></strong></li>
+          <li>Deadline: <strong><%= settings.applyDeadlineDay %><sup>th</sup> of month</strong></li>
+          <li>Eligible: <strong><%= settings.category %></strong></li>
+          <li>Status: <strong style="color:<%= settings.applicationsOpen ? 'var(--green)' : 'var(--red)' %>"><%= settings.applicationsOpen ? 'OPEN' : 'CLOSED' %></strong></li>
+        </ul>
+      </div>
+      <div class="help-card help-card-warn">
+        <h4 class="help-title">⚠ Note</h4>
+        <p>Changes affect only <strong>new</strong> applications. Already-submitted applications keep the amount and terms that were in effect when they were filed.</p>
+      </div>
+    </aside>
+  </div>
+</main>
+<%- include('partials/footer') %>
+<script>
+  function recalc() {
+    const amt = parseInt(document.getElementById('amount').value) || 0;
+    const inst = parseInt(document.getElementById('installments').value) || 1;
+    document.getElementById('calcAmount').textContent = amt.toLocaleString('en-IN');
+    document.getElementById('calcInst').textContent = inst;
+    document.getElementById('calcMonthly').textContent = Math.round(amt / inst).toLocaleString('en-IN');
+  }
+</script>
+</body>
+</html>

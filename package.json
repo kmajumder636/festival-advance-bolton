@@ -1,0 +1,27 @@
+{
+  "name": "festival-advance-bolton",
+  "version": "1.0.0",
+  "description": "SAIL Festival Advance Bolton — employee welfare application system",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["sail", "festival-advance", "nodejs", "express"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^2.2.2",
+    "dotenv": "^17.4.2",
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "express-validator": "^7.3.2",
+    "helmet": "^8.2.0",
+    "morgan": "^1.11.0",
+    "uuid": "^14.0.0"
+  }
+}

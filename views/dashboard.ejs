@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Festival Advance Bolton</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<%- include('partials/navbar') %>
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Dashboard</h2>
+      <p class="page-sub">Welcome back, <strong><%= user.name %></strong> · <span class="role-badge role-<%= user.role %>"><%= user.role.toUpperCase() %></span></p>
+    </div>
+    <% if (user.role === 'employee') { %>
+    <a href="/apply" class="btn btn-primary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Apply Now
+    </a>
+    <% } else if (user.role === 'finance') { %>
+    <a href="/finance/export" class="btn btn-secondary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      Export CSV
+    </a>
+    <% } %>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <% if (user.role === 'employee') { %>
+    <div class="stat-card stat-blue">
+      <div class="stat-icon">📋</div>
+      <div class="stat-body">
+        <div class="stat-value"><%= stats.total %></div>
+        <div class="stat-label">Total Applications</div>
+      </div>
+    </div>
+    <div class="stat-card stat-amber">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-body">
+        <div class="stat-value"><%= stats.pending %></div>
+        <div class="stat-label">Pending</div>
+      </div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-icon">✅</div>
+      <div class="stat-body">
+        <div class="stat-value"><%= stats.approved %></div>
+        <div class="stat-label">Approved</div>
+      </div>
+    </div>
+    <div class="stat-card stat-red">
+      <div class="stat-icon">❌</div>
+      <div class="stat-body">
+        <div class="stat-value"><%= stats.rejected %></div>
+        <div class="stat-label">Rejected</div>
+      </div>
+    </div>
+    <% } else if (user.role === 'hod') { %>
+    <div class="stat-card stat-blue">
+      <div class="stat-icon">📋</div>
+      <div class="stat-body">
+        <div class="stat-value"><%= stats.total %></div>
+        <div class="stat-label">Dept Applications</div>
+      </div>
+    </div>
+    <div class="stat-card stat-amber">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-body">
+        <div class="stat-value"><%= stats.pending %></div>
+        <div class="stat-label">Awaiting Review</div>
+      </div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-icon">✅</div>
+      <div class="stat-body">
+        <div class="stat-value"><%= stats.approved %></div>
+        <div class="stat-label">Approved</div>
+      </div>
+    </div>
+    <div class="stat-card stat-red">
+      <div class="stat-icon">❌</div>
+      <div class="stat-body">
+        <div class="stat-value"><%= stats.rejected %></div>
+        <div class="stat-label">Rejected</div>
+      </div>
+    </div>
+    <% } else { %>
+    <div class="stat-card stat-blue">
+      <div class="stat-icon">📊</div>
+      <div class="stat-body">
+        <div class="stat-value"><%= stats.total %></div>
+        <div class="stat-label">Total (All Depts)</div>
+      </div>
+    </div>
+    <div class="stat-card stat-amber">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-body">
+        <div class="stat-value"><%= stats.pending %></div>
+        <div class="stat-label">Pending at HoD</div>
+      </div>
+    </div>
+    <div class="stat-card stat-purple">
+      <div class="stat-icon">🔍</div>
+      <div class="stat-body">
+        <div class="stat-value"><%= stats.hodApproved %></div>
+        <div class="stat-label">Awaiting Finance</div>
+      </div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-icon">✅</div>
+      <div class="stat-body">
+        <div class="stat-value"><%= stats.approved %></div>
+        <div class="stat-label">Fully Approved</div>
+      </div>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Notice Banner -->
+  <div class="notice-banner">
+    <span class="notice-icon">ℹ</span>
+    <div>
+      <strong>Festival Advance Policy:</strong> Advance amount of <strong>₹<%= settings.amount.toLocaleString('en-IN') %>/-</strong> for <%= settings.category.toLowerCase() %> employees, recoverable in <strong><%= settings.installments %> monthly instalments of ₹<%= instalmentAmt.toLocaleString('en-IN') %>/-</strong> each. Applications must be submitted by the <strong><%= settings.applyDeadlineDay %><sup>th</sup> of the month</strong>.
+    </div>
+  </div>
+
+  <!-- Applications Table -->
+  <div class="table-card">
+    <div class="table-header">
+      <h3 class="table-title">
+        <% if (user.role === 'employee') { %>My Applications
+        <% } else if (user.role === 'hod') { %>Department Applications — Pending Review
+        <% } else { %>Applications — Awaiting Finance Approval
+        <% } %>
+      </h3>
+      <div class="table-search">
+        <input type="text" id="tableSearch" placeholder="Search…" oninput="filterTable(this.value)">
+      </div>
+    </div>
+    <% if (applications.length === 0) { %>
+    <div class="empty-state">
+      <div class="empty-icon">🎉</div>
+      <p class="empty-title">No applications yet</p>
+      <% if (user.role === 'employee') { %>
+      <p class="empty-sub">Start by clicking <strong>Apply Now</strong> above.</p>
+      <% } else { %>
+      <p class="empty-sub">No applications awaiting your action.</p>
+      <% } %>
+    </div>
+    <% } else { %>
+    <div class="table-wrap">
+      <table class="data-table" id="appTable">
+        <thead>
+          <tr>
+            <th>Ref. No</th>
+            <% if (user.role !== 'employee') { %><th>Staff</th><% } %>
+            <th>Festival</th>
+            <th>Month/Year</th>
+            <th>Amount</th>
+            <th>Applied On</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% applications.forEach(app => { %>
+          <tr>
+            <td><span class="mono"><%= app.refNo %></span></td>
+            <% if (user.role !== 'employee') { %>
+            <td>
+              <div class="staff-cell">
+                <span class="staff-name"><%= app.staffName %></span>
+                <span class="staff-no"><%= app.staffNo %></span>
+              </div>
+            </td>
+            <% } %>
+            <td><%= app.festival %></td>
+            <td><%= app.month %> <%= app.year %></td>
+            <td class="amount-cell">₹<%= app.amount.toLocaleString('en-IN') %></td>
+            <td><%= app.appliedOn %></td>
+            <td><span class="status-badge status-<%= app.status.replace(/\s+/g,'-').toLowerCase() %>"><%= app.status %></span></td>
+            <td>
+              <% if ((user.role === 'hod') && app.status === 'Pending') { %>
+              <div class="action-btns">
+                <form action="/hod/action/<%= app.id %>" method="POST" style="display:inline" onsubmit="return confirmAction('approve')">
+                  <input type="hidden" name="action" value="approve">
+                  <input type="hidden" name="remarks" value="Approved by HoD">
+                  <button class="btn btn-sm btn-success">Approve</button>
+                </form>
+                <button class="btn btn-sm btn-danger" onclick="showRejectModal('<%= app.id %>', 'hod')">Reject</button>
+              </div>
+              <% } else if (user.role === 'finance' && app.status === 'HOD Approved') { %>
+              <div class="action-btns">
+                <form action="/finance/action/<%= app.id %>" method="POST" style="display:inline">
+                  <input type="hidden" name="action" value="approve">
+                  <input type="hidden" name="remarks" value="Sanctioned by Finance">
+                  <button class="btn btn-sm btn-success">Sanction</button>
+                </form>
+                <button class="btn btn-sm btn-danger" onclick="showRejectModal('<%= app.id %>', 'finance')">Reject</button>
+              </div>
+              <% } else { %>
+              <div class="action-btns">
+                <a href="/application/<%= app.id %>" class="btn btn-sm btn-outline">View</a>
+                <% if (user.role === 'employee') { %>
+                <a href="/application/<%= app.id %>/print" class="btn btn-sm btn-secondary" target="_blank">PDF</a>
+                <% } %>
+              </div>
+              <% } %>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+</main>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="modal-overlay" style="display:none">
+  <div class="modal-card">
+    <h3 class="modal-title">Provide Rejection Remarks</h3>
+    <p class="modal-sub">Please mention the reason for rejecting this application.</p>
+    <form id="rejectForm" method="POST">
+      <input type="hidden" name="action" value="reject">
+      <div class="form-group">
+        <label>Remarks *</label>
+        <textarea name="remarks" rows="3" placeholder="Enter reason for rejection…" required class="textarea"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" onclick="closeModal()" class="btn btn-outline">Cancel</button>
+        <button type="submit" class="btn btn-danger">Confirm Rejection</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
+<script src="/js/dashboard.js"></script>
+</body>
+</html>

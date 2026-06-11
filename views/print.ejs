@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Festival Advance Application — <%= app.refNo %></title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #e8edf3; color: #1a1a1a; padding: 24px; line-height: 1.5; }
+
+  /* Toolbar (hidden when printing) */
+  .toolbar { max-width: 800px; margin: 0 auto 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .toolbar .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; text-decoration: none; font-family: inherit; }
+  .btn-print { background: #0f1b35; color: #fff; }
+  .btn-print:hover { background: #1a2d54; }
+  .btn-back { background: #fff; color: #374151; border: 1px solid #d1d5db; }
+  .toolbar-hint { font-size: 13px; color: #6b7280; }
+
+  /* The page sheet (A4-like) */
+  .sheet {
+    max-width: 800px; margin: 0 auto; background: #fff;
+    padding: 48px 56px; box-shadow: 0 4px 24px rgba(0,0,0,.12);
+    border-top: 5px solid #0f1b35;
+  }
+
+  /* Letterhead */
+  .letterhead { display: flex; align-items: center; gap: 18px; padding-bottom: 18px; border-bottom: 2px solid #0f1b35; }
+  .letterhead img { width: 66px; height: 66px; object-fit: contain; }
+  .lh-text { flex: 1; }
+  .company-name { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: #0f1b35; letter-spacing: .01em; }
+  .company-sub { font-size: 12px; color: #6b7280; font-style: italic; margin-top: 2px; }
+  .doc-meta { text-align: right; font-size: 12px; color: #374151; }
+  .doc-meta strong { color: #0f1b35; }
+
+  /* Title */
+  .doc-title { text-align: center; margin: 24px 0 20px; }
+  .doc-title h1 { font-size: 18px; font-weight: 700; color: #0f1b35; text-transform: uppercase; letter-spacing: .04em; }
+  .doc-title .underline { width: 60px; height: 3px; background: #c9a84c; margin: 8px auto 0; }
+
+  /* Ref + date row */
+  .ref-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 22px; }
+  .ref-row .label { color: #6b7280; }
+  .ref-row .val { font-weight: 600; color: #0f1b35; }
+
+  /* Sections */
+  .section { margin-bottom: 20px; }
+  .section-head { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #fff; background: #0f1b35; padding: 6px 12px; border-radius: 4px 4px 0 0; }
+  .section-body { border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 4px 4px; }
+  .row { display: flex; border-bottom: 1px solid #f1f3f5; }
+  .row:last-child { border-bottom: none; }
+  .cell { flex: 1; padding: 9px 12px; font-size: 13px; }
+  .cell .k { color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; display: block; margin-bottom: 1px; }
+  .cell .v { color: #1a1a1a; font-weight: 600; }
+  .cell + .cell { border-left: 1px solid #f1f3f5; }
+
+  /* Amount highlight */
+  .amount-box { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 16px; margin-top: 10px; }
+  .amount-box .amt { font-size: 22px; font-weight: 700; color: #059669; }
+  .amount-box .terms { font-size: 12px; color: #6b7280; text-align: right; }
+
+  /* Declaration */
+  .declaration { font-size: 12px; color: #374151; border: 1px solid #e5e7eb; border-radius: 6px; padding: 14px 16px; background: #fcfcfa; }
+  .declaration p { margin-bottom: 6px; font-weight: 600; }
+  .declaration ul { padding-left: 18px; }
+  .declaration li { margin-bottom: 3px; }
+
+  /* Signatures */
+  .signatures { display: flex; gap: 40px; margin-top: 44px; }
+  .sig-block { flex: 1; text-align: center; }
+  .sig-line { border-top: 1.5px solid #1a1a1a; padding-top: 6px; margin-top: 40px; }
+  .sig-name { font-size: 13px; font-weight: 700; color: #0f1b35; }
+  .sig-role { font-size: 11px; color: #6b7280; margin-top: 1px; }
+  .sig-date { font-size: 11px; color: #6b7280; margin-top: 4px; }
+
+  /* Footer */
+  .doc-footer { margin-top: 36px; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 10px; color: #9ca3af; text-align: center; line-height: 1.6; }
+
+  /* Print rules */
+  @media print {
+    body { background: #fff; padding: 0; }
+    .toolbar { display: none !important; }
+    .sheet { box-shadow: none; max-width: 100%; padding: 24px 28px; border-top: 4px solid #0f1b35; }
+    @page { margin: 14mm; }
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <a href="/application/<%= app.id %>" class="btn btn-back">← Back</a>
+    <span class="toolbar-hint">Use <strong>Save as PDF</strong> in the print dialog to download, then submit to your manager.</span>
+    <button class="btn btn-print" onclick="window.print()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+      Print / Save as PDF
+    </button>
+  </div>
+
+  <div class="sheet">
+    <!-- Letterhead -->
+    <div class="letterhead">
+      <img src="/images/sail-logo.jpg" alt="SAIL">
+      <div class="lh-text">
+        <div class="company-name">Steel Authority of India Limited</div>
+        <div class="company-sub">There's a little bit of SAIL in everybody's life</div>
+      </div>
+      <div class="doc-meta">
+        <div><span>Ref No:</span> <strong><%= app.refNo %></strong></div>
+        <div><span>Status:</span> <strong><%= app.status %></strong></div>
+      </div>
+    </div>
+
+    <!-- Title -->
+    <div class="doc-title">
+      <h1>Application for Festival Advance</h1>
+      <div class="underline"></div>
+    </div>
+
+    <!-- Ref + Date -->
+    <div class="ref-row">
+      <div><span class="label">Application Date:</span> <span class="val"><%= app.appliedOn %></span></div>
+      <div><span class="label">Festival / Occasion:</span> <span class="val"><%= app.festival %></span></div>
+    </div>
+
+    <!-- Employee Details -->
+    <div class="section">
+      <div class="section-head">Employee Details</div>
+      <div class="section-body">
+        <div class="row">
+          <div class="cell"><span class="k">Staff Number</span><span class="v"><%= app.staffNo %></span></div>
+          <div class="cell"><span class="k">Name</span><span class="v"><%= app.staffName %></span></div>
+        </div>
+        <div class="row">
+          <div class="cell"><span class="k">Designation</span><span class="v"><%= app.designation %></span></div>
+          <div class="cell"><span class="k">Department</span><span class="v"><%= app.dept %> (<%= app.deptCode %>)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Advance Details -->
+    <div class="section">
+      <div class="section-head">Advance Details</div>
+      <div class="section-body">
+        <div class="row">
+          <div class="cell"><span class="k">Month / Year of Advance</span><span class="v"><%= app.month %> <%= app.year %></span></div>
+          <div class="cell"><span class="k">Recovery Instalments</span><span class="v"><%= app.installments %> × ₹<%= app.installmentAmt.toLocaleString('en-IN') %>/-</span></div>
+        </div>
+      </div>
+      <div class="amount-box">
+        <div>
+          <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.03em;">Advance Amount Requested</div>
+          <div class="amt">₹<%= app.amount.toLocaleString('en-IN') %>/-</div>
+        </div>
+        <div class="terms">Recoverable in <%= app.installments %> monthly<br>instalments of ₹<%= app.installmentAmt.toLocaleString('en-IN') %>/- each</div>
+      </div>
+    </div>
+
+    <!-- Bank Details -->
+    <div class="section">
+      <div class="section-head">Bank Account Details</div>
+      <div class="section-body">
+        <div class="row">
+          <div class="cell"><span class="k">Bank Account Number</span><span class="v"><%= app.bankAccount %></span></div>
+          <div class="cell"><span class="k">IFSC Code</span><span class="v"><%= app.ifscCode %></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Declaration -->
+    <div class="section">
+      <div class="section-head">Declaration</div>
+      <div class="declaration">
+        <p>I hereby declare that:</p>
+        <ul>
+          <li>The information furnished above is true and correct to the best of my knowledge.</li>
+          <li>I have not availed Festival Advance for the above festival/month previously in the current year.</li>
+          <li>I agree to the recovery of ₹<%= app.installmentAmt.toLocaleString('en-IN') %>/- per month for <%= app.installments %> consecutive months from my salary.</li>
+          <li>I understand the advance is subject to approval by HoD and the Finance department.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Signatures -->
+    <div class="signatures">
+      <div class="sig-block">
+        <div class="sig-line">
+          <div class="sig-name"><%= app.staffName %></div>
+          <div class="sig-role">Applicant (Signature)</div>
+          <div class="sig-date">Date: <%= app.appliedOn %></div>
+        </div>
+      </div>
+      <div class="sig-block">
+        <div class="sig-line">
+          <div class="sig-name">&nbsp;</div>
+          <div class="sig-role">Head of Department (Signature)</div>
+          <div class="sig-date">Date: ____________</div>
+        </div>
+      </div>
+      <div class="sig-block">
+        <div class="sig-line">
+          <div class="sig-name">&nbsp;</div>
+          <div class="sig-role">Sr. Manager Finance–Pay (Signature)</div>
+          <div class="sig-date">Date: ____________</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="doc-footer">
+      Steel Authority of India Limited · Festival Advance &nbsp;|&nbsp; Issued vide SAIL Circular No. PER/E CI/1983 dated 22/09/2008<br>
+      This is a system-generated application form. Printed on <%= printedOn %>.
+    </div>
+  </div>
+
+  <script>
+    // Optional: auto-open print dialog if ?auto=1
+    if (new URLSearchParams(location.search).get('auto') === '1') {
+      window.addEventListener('load', () => setTimeout(() => window.print(), 400));
+    }
+  </script>
+</body>
+</html>
