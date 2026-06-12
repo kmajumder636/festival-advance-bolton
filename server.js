@@ -14,8 +14,8 @@ const PORT = process.env.PORT || 3000;
 const db = {
   applications: [],
   users: [
-    { staffNo: 'EMP001', name: 'Rajesh Kumar', dept: 'HRD', deptCode: 'HRD', role: 'employee', password: 'pass123', designation: 'Senior Officer' },
-    { staffNo: 'EMP002', name: 'Priya Sharma', dept: 'FIN', deptCode: 'FIN', role: 'employee', password: 'pass123', designation: 'Officer' },
+    { staffNo: 'EMP001', name: 'Rajesh Kumar', dept: 'HRD', deptCode: 'HRD', role: 'employee', password: 'pass123', designation: 'Senior Officer', salaryAccount: '50100234567890', salaryIfsc: 'SBIN0001234' },
+    { staffNo: 'EMP002', name: 'Priya Sharma', dept: 'FIN', deptCode: 'FIN', role: 'employee', password: 'pass123', designation: 'Officer', salaryAccount: '50100987654321', salaryIfsc: 'HDFC0000456' },
     { staffNo: 'HOD001', name: 'Shanta H Sinha', dept: 'HRD', deptCode: 'HRD', role: 'hod', password: 'hod123', designation: 'Head of Department' },
     { staffNo: 'MGR001', name: 'Finance Manager', dept: 'FIN', deptCode: 'FIN', role: 'finance', password: 'fin123', designation: 'Sr. Manager Finance-Pay' },
     { staffNo: 'ADMIN001', name: 'System Administrator', dept: 'IT', deptCode: 'ITD', role: 'admin', password: 'admin123', designation: 'Bolton Administrator' },
@@ -210,15 +210,22 @@ app.post('/apply', requireLogin, (req, res) => {
   const user = req.session.user;
   if (user.role !== 'employee') return res.redirect('/dashboard');
 
-  const { festival, month, year, bankAccount, ifscCode, declaration } = req.body;
+  const { festival, month, year, bankAccount, ifscCode, declaration, useSalaryAccount } = req.body;
   const today = new Date();
   const errors = [];
+  const usingSalary = (useSalaryAccount === 'on' || useSalaryAccount === 'yes' || useSalaryAccount === 'true');
 
   if (!festival) errors.push('Please select a festival.');
   if (!month) errors.push('Please select the month.');
   if (!year) errors.push('Please select the year.');
-  if (!bankAccount || !/^\d{9,18}$/.test(bankAccount)) errors.push('Please enter a valid bank account number (9-18 digits).');
-  if (!ifscCode || !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifscCode)) errors.push('Please enter a valid IFSC code.');
+
+  // Bank validation only required when NOT using the salary account
+  if (usingSalary) {
+    if (!user.salaryAccount) errors.push('No salary account is on file for your record. Please enter bank details manually.');
+  } else {
+    if (!bankAccount || !/^\d{9,18}$/.test(bankAccount)) errors.push('Please enter a valid bank account number (9-18 digits).');
+    if (!ifscCode || !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifscCode)) errors.push('Please enter a valid IFSC code.');
+  }
   if (!declaration) errors.push('Please accept the declaration.');
 
   // Applications open check
@@ -258,9 +265,12 @@ app.post('/apply', requireLogin, (req, res) => {
     amount: settings.amount,
     installments: settings.installments,
     installmentAmt: instalmentAmt(),
-    bankAccount: bankAccount.replace(/\d(?=\d{4})/g, '*'),
-    bankAccountRaw: bankAccount,
-    ifscCode,
+    accountType: usingSalary ? 'Salary Account' : 'Other Account',
+    bankAccount: usingSalary
+      ? user.salaryAccount.replace(/\d(?=\d{4})/g, '*')
+      : bankAccount.replace(/\d(?=\d{4})/g, '*'),
+    bankAccountRaw: usingSalary ? user.salaryAccount : bankAccount,
+    ifscCode: usingSalary ? user.salaryIfsc : ifscCode,
     status: 'Pending',
     appliedOn: new Date().toLocaleDateString('en-IN'),
     appliedAt: new Date(),

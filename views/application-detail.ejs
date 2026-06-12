@@ -49,6 +49,7 @@
           <div class="detail-item"><span class="detail-label">Month / Year</span><span class="detail-val"><%= app.month %> <%= app.year %></span></div>
           <div class="detail-item"><span class="detail-label">Advance Amount</span><span class="detail-val amount-cell">₹<%= app.amount.toLocaleString('en-IN') %>/-</span></div>
           <div class="detail-item"><span class="detail-label">Instalments</span><span class="detail-val"><%= app.installments %> × ₹<%= app.installmentAmt %>/-</span></div>
+          <div class="detail-item"><span class="detail-label">Account Type</span><span class="detail-val"><%= app.accountType || 'Other Account' %></span></div>
           <div class="detail-item"><span class="detail-label">Bank Account</span><span class="detail-val mono"><%= app.bankAccount %></span></div>
           <div class="detail-item"><span class="detail-label">IFSC Code</span><span class="detail-val mono"><%= app.ifscCode %></span></div>
         </div>

@@ -94,7 +94,7 @@ body {
 
 .demo-creds { border-top: 1px solid var(--border); padding-top: 1.2rem; }
 .demo-title { font-size: .8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .75rem; text-align: center; }
-.cred-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+.cred-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem; }
 .cred-item {
   background: var(--cream); border: 1px solid var(--border);
   border-radius: var(--radius-sm); padding: .6rem .5rem;
@@ -327,6 +327,23 @@ body {
 .checkbox-label input[type="checkbox"] { width: 16px; height: 16px; margin-top: 2px; flex-shrink: 0; accent-color: var(--navy); cursor: pointer; }
 
 .form-actions { display: flex; justify-content: flex-end; gap: .75rem; padding-top: .5rem; }
+
+/* ─── Salary Account Option ──────────────────────────────────────────────── */
+.salary-option {
+  display: flex; align-items: center; gap: .85rem;
+  padding: .9rem 1.1rem; margin-bottom: 1.1rem;
+  background: #f8fafc; border: 1.5px solid var(--border-mid);
+  border-radius: var(--radius-sm); cursor: pointer; transition: all .15s;
+  position: relative;
+}
+.salary-option:hover { border-color: var(--navy-light); background: #f3f6fb; }
+.salary-option input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--green); cursor: pointer; flex-shrink: 0; }
+.salary-option-body { display: flex; flex-direction: column; flex: 1; }
+.salary-option-title { font-size: .9rem; font-weight: 600; color: var(--text-dark); }
+.salary-option-sub { font-size: .78rem; color: var(--text-soft); margin-top: .1rem; font-family: 'SF Mono', monospace; }
+.salary-check { display: none; color: var(--green); font-weight: 700; font-size: 1.1rem; }
+.salary-option:has(input:checked) { border-color: var(--green); background: #ecfdf5; }
+.salary-option:has(input:checked) .salary-check { display: block; }
 
 /* ─── Toggle Switch ──────────────────────────────────────────────────────── */
 .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.1rem; background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-top: 1rem; }
