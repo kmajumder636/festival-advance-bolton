@@ -1,11 +1,11 @@
 <nav class="navbar">
-  <div class="nav-brand">
+  <a href="<%= user.role === 'admin' ? '/admin' : '/dashboard' %>" class="nav-brand">
     <img src="/images/sail-logo.jpg" alt="SAIL" class="nav-logo">
     <div>
       <span class="nav-title">Festival Advance</span>
       <span class="nav-sub">Steel Authority of India Limited</span>
     </div>
-  </div>
+  </a>
   <div class="nav-links">
     <% if (user.role === 'admin') { %>
     <a href="/admin" class="nav-link">Policy Settings</a>

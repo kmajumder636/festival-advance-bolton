@@ -134,7 +134,7 @@ body {
   box-shadow: 0 2px 16px rgba(0,0,0,.2);
 }
 
-.nav-brand { display: flex; align-items: center; gap: .75rem; flex-shrink: 0; }
+.nav-brand { display: flex; align-items: center; gap: .75rem; flex-shrink: 0; text-decoration: none; color: inherit; }
 .nav-logo { width: 38px; height: 38px; object-fit: contain; background: var(--white); border-radius: 6px; padding: 3px; }
 .nav-title { display: block; font-weight: 700; font-size: .95rem; letter-spacing: -.01em; }
 .nav-sub { display: block; font-size: .72rem; color: rgba(255,255,255,.45); letter-spacing: .04em; }
@@ -406,3 +406,116 @@ body {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE OPTIMISATION
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Tablet and below */
+@media (max-width: 768px) {
+  html { font-size: 14px; }
+
+  /* Fixed backgrounds are janky on mobile — let it scroll */
+  body { background-attachment: scroll, scroll; background-size: cover, cover; }
+
+  /* Navbar: compact, links wrap to a second row */
+  .navbar { padding: .35rem 1rem; gap: .5rem; height: auto; flex-wrap: wrap; }
+  .nav-logo { width: 32px; height: 32px; }
+  .nav-title { font-size: .85rem; }
+  .nav-sub { display: none; }                 /* drop the long subtitle */
+  .user-info { display: none; }               /* keep just avatar + logout */
+  .nav-user { gap: .5rem; margin-left: auto; }
+  .nav-links {
+    order: 3; width: 100%; display: flex; justify-content: center; gap: .25rem;
+    padding: .35rem 0 .15rem; margin-top: .3rem;
+    border-top: 1px solid rgba(255,255,255,.12);
+  }
+  .nav-link { padding: .4rem 1rem; }
+
+  /* Main content padding */
+  .main-content { padding: 1.25rem 1rem 3rem; }
+
+  /* Page header stacks */
+  .page-header { flex-direction: column; align-items: stretch; gap: 1rem; }
+  .page-header .btn,
+  .page-header > a.btn { width: 100%; justify-content: center; }
+  .page-title { font-size: 1.4rem; }
+
+  /* Detail header action column full width */
+  .page-header > div[style] { align-items: stretch !important; }
+  .page-header .btn-secondary { width: 100%; justify-content: center; }
+
+  /* Stats: 2 per row, tighter */
+  .stats-grid { gap: .75rem; }
+  .stat-card { padding: 1rem; gap: .75rem; }
+  .stat-value { font-size: 1.6rem; }
+  .stat-icon { font-size: 1.4rem; }
+
+  /* Table header + search stack */
+  .table-header { flex-direction: column; align-items: stretch; gap: .75rem; }
+  .table-search input { width: 100%; }
+
+  /* ── Transform the data table into stacked cards ── */
+  .data-table thead { display: none; }
+  .data-table, .data-table tbody, .data-table tr, .data-table td { display: block; width: 100%; }
+  .data-table tr {
+    margin: 0 .75rem .85rem; padding: .35rem .25rem;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--white); box-shadow: var(--shadow-sm);
+  }
+  .table-wrap { padding: .75rem 0 .25rem; }
+  .data-table td {
+    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+    padding: .5rem .85rem; border: none; border-bottom: 1px solid #f1f3f5;
+    text-align: right;
+  }
+  .data-table tr td:last-child { border-bottom: none; }
+  .data-table td::before {
+    content: attr(data-label);
+    font-size: .72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em; color: var(--text-muted);
+    text-align: left; flex-shrink: 0;
+  }
+  .data-table td.amount-cell { font-size: 1rem; }
+  .staff-cell { align-items: flex-end; }
+  /* Action row: label on top, buttons full width below */
+  .data-table td[data-label="Action"] { flex-direction: column; align-items: stretch; gap: .5rem; }
+  .data-table td[data-label="Action"]::before { text-align: left; }
+  .action-btns { width: 100%; }
+  .action-btns .btn, .action-btns form { flex: 1; }
+  .action-btns .btn { width: 100%; justify-content: center; }
+
+  /* Forms: full-width action buttons */
+  .form-actions { flex-direction: column-reverse; }
+  .form-actions .btn { width: 100%; justify-content: center; }
+  .form-card { padding: 1.1rem; }
+
+  /* Detail grid single column on small phones handled below */
+  .detail-grid { grid-template-columns: 1fr 1fr; }
+
+  /* Notice banner a touch tighter */
+  .notice-banner { padding: .85rem 1rem; font-size: .82rem; }
+
+  /* Login card */
+  .login-card { padding: 1.75rem 1.4rem; }
+  .sso-idp-bar { margin: -1.75rem -1.4rem 1.5rem; }
+}
+
+/* Small phones */
+@media (max-width: 460px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .cred-grid { grid-template-columns: 1fr; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .page-title { font-size: 1.25rem; }
+  .brand-name { font-size: 1.5rem; }
+  .footer-inner { font-size: .72rem; }
+  /* Avoid horizontal overflow from long ref numbers */
+  .mono { word-break: break-all; }
+}
+
+/* Larger tap targets on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .btn { min-height: 42px; }
+  .btn-sm { min-height: 36px; }
+  .nav-link, .logout-btn { min-height: 40px; display: inline-flex; align-items: center; }
+}

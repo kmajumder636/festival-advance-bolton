@@ -170,21 +170,21 @@
         <tbody>
           <% applications.forEach(app => { %>
           <tr>
-            <td><span class="mono"><%= app.refNo %></span></td>
+            <td data-label="Ref. No"><span class="mono"><%= app.refNo %></span></td>
             <% if (user.role !== 'employee') { %>
-            <td>
+            <td data-label="Staff">
               <div class="staff-cell">
                 <span class="staff-name"><%= app.staffName %></span>
                 <span class="staff-no"><%= app.staffNo %></span>
               </div>
             </td>
             <% } %>
-            <td><%= app.festival %></td>
-            <td><%= app.month %> <%= app.year %></td>
-            <td class="amount-cell">₹<%= app.amount.toLocaleString('en-IN') %></td>
-            <td><%= app.appliedOn %></td>
-            <td><span class="status-badge status-<%= app.status.replace(/\s+/g,'-').toLowerCase() %>"><%= app.status %></span></td>
-            <td>
+            <td data-label="Festival"><%= app.festival %></td>
+            <td data-label="Month/Year"><%= app.month %> <%= app.year %></td>
+            <td data-label="Amount" class="amount-cell">₹<%= app.amount.toLocaleString('en-IN') %></td>
+            <td data-label="Applied On"><%= app.appliedOn %></td>
+            <td data-label="Status"><span class="status-badge status-<%= app.status.replace(/\s+/g,'-').toLowerCase() %>"><%= app.status %></span></td>
+            <td data-label="Action">
               <% if ((user.role === 'hod') && app.status === 'Pending') { %>
               <div class="action-btns">
                 <form action="/hod/action/<%= app.id %>" method="POST" style="display:inline" onsubmit="return confirmAction('approve')">
