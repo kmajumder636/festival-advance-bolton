@@ -14,14 +14,23 @@ const PORT = process.env.PORT || 3000;
 const db = {
   applications: [],
   users: [
-    { staffNo: 'EMP001', name: 'Rajesh Kumar', dept: 'HRD', deptCode: 'HRD', role: 'employee', password: 'pass123', designation: 'Senior Officer', salaryAccount: '50100234567890', salaryIfsc: 'SBIN0001234' },
-    { staffNo: 'EMP002', name: 'Priya Sharma', dept: 'FIN', deptCode: 'FIN', role: 'employee', password: 'pass123', designation: 'Officer', salaryAccount: '50100987654321', salaryIfsc: 'HDFC0000456' },
-    { staffNo: 'HOD001', name: 'Shanta H Sinha', dept: 'HRD', deptCode: 'HRD', role: 'hod', password: 'hod123', designation: 'Head of Department' },
-    { staffNo: 'MGR001', name: 'Finance Manager', dept: 'FIN', deptCode: 'FIN', role: 'finance', password: 'fin123', designation: 'Sr. Manager Finance-Pay' },
-    { staffNo: 'ADMIN001', name: 'System Administrator', dept: 'IT', deptCode: 'ITD', role: 'admin', password: 'admin123', designation: 'Bolton Administrator' },
+    { staffNo: 'EMP001', name: 'Rajesh Kumar', dept: 'HRD', deptCode: 'HRD', role: 'employee', password: 'pass123', designation: 'Senior Officer', salaryAccount: '50100234567890', salaryIfsc: 'SBIN0001234', email: 'emp001@sail.co.in' },
+    { staffNo: 'EMP002', name: 'Priya Sharma', dept: 'FIN', deptCode: 'FIN', role: 'employee', password: 'pass123', designation: 'Officer', salaryAccount: '50100987654321', salaryIfsc: 'HDFC0000456', email: 'emp002@sail.co.in' },
+    { staffNo: 'HOD001', name: 'Shanta H Sinha', dept: 'HRD', deptCode: 'HRD', role: 'hod', password: 'hod123', designation: 'Head of Department', email: 'hod001@sail.co.in' },
+    { staffNo: 'MGR001', name: 'Finance Manager', dept: 'FIN', deptCode: 'FIN', role: 'finance', password: 'fin123', designation: 'Sr. Manager Finance-Pay', email: 'mgr001@sail.co.in' },
+    { staffNo: 'ADMIN001', name: 'System Administrator', dept: 'IT', deptCode: 'ITD', role: 'admin', password: 'admin123', designation: 'Bolton Administrator', email: 'admin001@sail.co.in' },
   ],
   festivals: ['Durga Puja', 'Diwali', 'Eid', 'Christmas', 'Holi', 'Dussehra', 'Navratri', 'Bhai Dooj']
 };
+
+// Optional: map external (Oracle) emails to staff accounts via env var, e.g.
+// ORACLE_EMAIL_MAP="you@gmail.com=ADMIN001,colleague@org.com=EMP001"
+(process.env.ORACLE_EMAIL_MAP || '').split(',').forEach(pair => {
+  const [em, staff] = pair.split('=').map(s => (s || '').trim());
+  if (!em || !staff) return;
+  const u = db.users.find(x => x.staffNo.toUpperCase() === staff.toUpperCase());
+  if (u) u.email = em.toLowerCase();
+});
 
 // ─── Policy Settings (editable by Admin) ────────────────────────────────────
 const settings = {
@@ -131,34 +140,74 @@ app.get('/sso/login', (req, res) => {
 // Step 2: Oracle redirects back here with an authorization code.
 // The server exchanges it for tokens (server-side, using the client secret).
 app.get('/sso/callback', async (req, res) => {
-  const { code, state } = req.query;
+  const { code, state, error: oerr, error_description } = req.query;
 
+  if (oerr) {
+    return res.render('login', { error: `Oracle Cloud returned an error: ${error_description || oerr}` });
+  }
   if (!state || state !== req.session.ssoState) {
     return res.render('login', { error: 'SSO session expired or invalid state. Please sign in again.' });
   }
   if (!code) {
     return res.render('login', { error: 'No authorization code returned from Oracle Cloud.' });
   }
-
-  // In production: exchange `code` for tokens at ORACLE.baseUrl/oauth2/v1/token
-  // using HTTP Basic auth (client_id:client_secret) — entirely server-side.
-  // Then decode the id_token, map the email/sub to a directory user, and sign in.
-  //
-  // Example (uncomment once a tenant + secret are configured):
-  // const tokenResp = await fetch(`${ORACLE.baseUrl}/oauth2/v1/token`, {
-  //   method: 'POST',
-  //   headers: {
-  //     'Authorization': 'Basic ' + Buffer.from(`${ORACLE.clientId}:${process.env.ORACLE_CLIENT_SECRET}`).toString('base64'),
-  //     'Content-Type': 'application/x-www-form-urlencoded'
-  //   },
-  //   body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: ORACLE.redirectUri })
-  // });
-  // const { id_token } = await tokenResp.json();
-  // const claims = JSON.parse(Buffer.from(id_token.split('.')[1], 'base64').toString());
-  // const user = db.users.find(u => u.staffNo.toLowerCase() === claims.sub.toLowerCase());
-
   delete req.session.ssoState;
-  return res.render('login', { error: 'Oracle Cloud SSO is not yet provisioned for this environment. Configure ORACLE_IDCS_URL, ORACLE_CLIENT_ID and ORACLE_CLIENT_SECRET, then register this callback URL in your IDCS app. For now, use standard staff-number login.' });
+
+  if (!ORACLE.baseUrl || !ORACLE.clientId || !process.env.ORACLE_CLIENT_SECRET) {
+    return res.render('login', { error: 'Oracle Cloud SSO is not fully configured. Set ORACLE_IDCS_URL, ORACLE_CLIENT_ID and ORACLE_CLIENT_SECRET.' });
+  }
+
+  try {
+    // Exchange the authorization code for tokens — server-side only.
+    const tokenResp = await fetch(`${ORACLE.baseUrl}/oauth2/v1/token`, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Basic ' + Buffer.from(`${ORACLE.clientId}:${process.env.ORACLE_CLIENT_SECRET}`).toString('base64'),
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: ORACLE.redirectUri,
+      }),
+    });
+
+    if (!tokenResp.ok) {
+      const detail = await tokenResp.text();
+      console.error('Oracle token exchange failed:', tokenResp.status, detail);
+      return res.render('login', { error: `Oracle token exchange failed (HTTP ${tokenResp.status}). Check client ID/secret and redirect URI.` });
+    }
+
+    const tokens = await tokenResp.json();
+    if (!tokens.id_token) {
+      return res.render('login', { error: 'Oracle did not return an ID token. Ensure the app allows the Authorization Code grant and the "openid" scope.' });
+    }
+
+    // Decode the ID token payload (claims). Signature verification can be
+    // added with the IDCS JWKS endpoint for defense in depth.
+    const claims = JSON.parse(Buffer.from(tokens.id_token.split('.')[1], 'base64url').toString());
+    const email = (claims.email || claims.sub || '').toLowerCase();
+    const emailLocal = email.split('@')[0];
+
+    // Map the Oracle identity to an app user:
+    // 1) exact email match, 2) email local-part vs staff number, 3) sub vs staff number
+    const user = db.users.find(u =>
+      (u.email && u.email.toLowerCase() === email) ||
+      u.staffNo.toLowerCase() === emailLocal ||
+      u.staffNo.toLowerCase() === (claims.sub || '').toLowerCase()
+    );
+
+    if (!user) {
+      return res.render('login', { error: `Signed in to Oracle as "${claims.email || claims.sub}", but no matching Festival Advance account was found. Ask the administrator to map this email to a staff account.` });
+    }
+
+    req.session.user = user;
+    req.session.loginMethod = 'Oracle SSO';
+    return res.redirect('/dashboard');
+  } catch (err) {
+    console.error('SSO callback error:', err);
+    return res.render('login', { error: 'Could not complete Oracle Cloud sign-in. Check the server logs and Oracle configuration.' });
+  }
 });
 
 // Dashboard
