@@ -210,7 +210,7 @@ app.post('/apply', requireLogin, (req, res) => {
   const user = req.session.user;
   if (user.role !== 'employee') return res.redirect('/dashboard');
 
-  const { festival, month, year, bankAccount, ifscCode, declaration, useSalaryAccount } = req.body;
+  const { festival, month, year, bankAccount, ifscCode, accountName, declaration, useSalaryAccount } = req.body;
   const today = new Date();
   const errors = [];
   const usingSalary = (useSalaryAccount === 'on' || useSalaryAccount === 'yes' || useSalaryAccount === 'true');
@@ -223,6 +223,7 @@ app.post('/apply', requireLogin, (req, res) => {
   if (usingSalary) {
     if (!user.salaryAccount) errors.push('No salary account is on file for your record. Please enter bank details manually.');
   } else {
+    if (!accountName || accountName.trim().length < 3) errors.push('Please enter the name as per bank (at least 3 characters).');
     if (!bankAccount || !/^\d{9,18}$/.test(bankAccount)) errors.push('Please enter a valid bank account number (9-18 digits).');
     if (!ifscCode || !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifscCode)) errors.push('Please enter a valid IFSC code.');
   }
@@ -266,6 +267,7 @@ app.post('/apply', requireLogin, (req, res) => {
     installments: settings.installments,
     installmentAmt: instalmentAmt(),
     accountType: usingSalary ? 'Salary Account' : 'Other Account',
+    accountName: usingSalary ? user.name : (accountName || '').trim(),
     bankAccount: usingSalary
       ? user.salaryAccount.replace(/\d(?=\d{4})/g, '*')
       : bankAccount.replace(/\d(?=\d{4})/g, '*'),

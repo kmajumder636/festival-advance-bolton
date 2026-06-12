@@ -161,11 +161,11 @@
       <div class="section-body">
         <div class="row">
           <div class="cell"><span class="k">Account Type</span><span class="v"><%= app.accountType || 'Other Account' %></span></div>
-          <div class="cell"><span class="k">Bank Account Number</span><span class="v"><%= app.bankAccount %></span></div>
+          <div class="cell"><span class="k">Name as per Bank</span><span class="v"><%= app.accountName || app.staffName %></span></div>
         </div>
         <div class="row">
+          <div class="cell"><span class="k">Bank Account Number</span><span class="v"><%= app.bankAccount %></span></div>
           <div class="cell"><span class="k">IFSC Code</span><span class="v"><%= app.ifscCode %></span></div>
-          <div class="cell"></div>
         </div>
       </div>
     </div>
