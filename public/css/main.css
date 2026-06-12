@@ -51,7 +51,7 @@ body {
 }
 
 /* ─── Login Page ─────────────────────────────────────────────────────────── */
-.login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+.login-page { min-height: 100vh; min-height: 100dvh; display: flex; align-items: flex-start; justify-content: center; position: relative; overflow-x: hidden; overflow-y: auto; }
 
 .login-bg {
   position: fixed; inset: 0; z-index: 0;
@@ -68,6 +68,7 @@ body {
   position: relative; z-index: 1;
   display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
   width: 100%; max-width: 440px; padding: 1.5rem;
+  margin: auto;
 }
 
 .login-card {
@@ -499,12 +500,21 @@ body {
   /* Login card */
   .login-card { padding: 1.75rem 1.4rem; }
   .sso-idp-bar { margin: -1.75rem -1.4rem 1.5rem; }
+  .login-container { padding: 1.25rem 1rem; gap: 1rem; }
+  .login-brand { margin-bottom: 1.4rem; }
+  .brand-logo { width: 60px; }
+  .login-form { gap: 1rem; margin-bottom: 1.2rem; }
+  .sso-divider { margin: 1rem 0; }
+}
+
+/* Keep demo credentials in 3 columns until very small, then stack */
+@media (max-width: 380px) {
+  .cred-grid { grid-template-columns: 1fr; }
 }
 
 /* Small phones */
 @media (max-width: 460px) {
   .stats-grid { grid-template-columns: 1fr 1fr; }
-  .cred-grid { grid-template-columns: 1fr; }
   .detail-grid { grid-template-columns: 1fr; }
   .page-title { font-size: 1.25rem; }
   .brand-name { font-size: 1.5rem; }
