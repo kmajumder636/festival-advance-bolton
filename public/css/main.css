@@ -111,8 +111,10 @@ body {
 .sso-divider::before, .sso-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .sso-divider span { padding: 0 .9rem; text-transform: uppercase; letter-spacing: .08em; }
 
-.btn-sso { background: var(--white); color: var(--navy); border-color: var(--navy-light); }
+.btn-sso { background: var(--white); color: var(--navy); border-color: var(--navy-light); margin-bottom: .6rem; }
 .btn-sso:hover { background: var(--navy); color: var(--white); border-color: var(--navy); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15,27,53,.2); }
+.btn-google { background: var(--white); color: #3c4043; border-color: var(--border-mid); }
+.btn-google:hover { background: #f8fafc; border-color: #c5ccd4; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.1); }
 .sso-hint { text-align: center; font-size: .76rem; color: var(--text-muted); margin-top: .6rem; }
 
 .sso-card { position: relative; }

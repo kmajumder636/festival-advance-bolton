@@ -23,15 +23,6 @@ const db = {
   festivals: ['Durga Puja', 'Diwali', 'Eid', 'Christmas', 'Holi', 'Dussehra', 'Navratri', 'Bhai Dooj']
 };
 
-// Optional: map external (Oracle) emails to staff accounts via env var, e.g.
-// ORACLE_EMAIL_MAP="you@gmail.com=ADMIN001,colleague@org.com=EMP001"
-(process.env.ORACLE_EMAIL_MAP || '').split(',').forEach(pair => {
-  const [em, staff] = pair.split('=').map(s => (s || '').trim());
-  if (!em || !staff) return;
-  const u = db.users.find(x => x.staffNo.toUpperCase() === staff.toUpperCase());
-  if (u) u.email = em.toLowerCase();
-});
-
 // ─── Policy Settings (editable by Admin) ────────────────────────────────────
 const settings = {
   amount: 5000,                 // Festival advance amount (₹)
@@ -52,6 +43,41 @@ const ORACLE = {
   redirectUri: process.env.ORACLE_REDIRECT_URI || `http://localhost:${PORT}/sso/callback`,
   scope: process.env.ORACLE_SCOPE || 'openid profile email',
 };
+
+// Google SSO configuration (Google Identity / OpenID Connect)
+const GOOGLE = {
+  clientId: process.env.GOOGLE_CLIENT_ID || '',
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+  redirectUri: process.env.GOOGLE_REDIRECT_URI || `http://localhost:${PORT}/sso/google/callback`,
+  scope: 'openid email profile',
+  authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+  tokenUrl: 'https://oauth2.googleapis.com/token',
+};
+
+// Map external SSO emails (Oracle or Google) to staff accounts via env vars, e.g.
+// ORACLE_EMAIL_MAP / GOOGLE_EMAIL_MAP = "you@gmail.com=EMP001,colleague@org.com=HOD001"
+function applyEmailMap(raw) {
+  (raw || '').split(',').forEach(pair => {
+    const [em, staff] = pair.split('=').map(s => (s || '').trim());
+    if (!em || !staff) return;
+    const u = db.users.find(x => x.staffNo.toUpperCase() === staff.toUpperCase());
+    if (u) u.altEmails = [...(u.altEmails || []), em.toLowerCase()];
+  });
+}
+applyEmailMap(process.env.ORACLE_EMAIL_MAP);
+applyEmailMap(process.env.GOOGLE_EMAIL_MAP);
+
+// Find an app user from SSO identity claims (shared by Oracle & Google)
+function findUserFromClaims(claims) {
+  const email = (claims.email || claims.sub || '').toLowerCase();
+  const emailLocal = email.split('@')[0];
+  return db.users.find(u =>
+    (u.email && u.email.toLowerCase() === email) ||
+    (u.altEmails && u.altEmails.includes(email)) ||
+    u.staffNo.toLowerCase() === emailLocal ||
+    u.staffNo.toLowerCase() === (claims.sub || '').toLowerCase()
+  );
+}
 
 // Security & middleware
 app.use(helmet({ contentSecurityPolicy: false }));
@@ -186,16 +212,7 @@ app.get('/sso/callback', async (req, res) => {
     // Decode the ID token payload (claims). Signature verification can be
     // added with the IDCS JWKS endpoint for defense in depth.
     const claims = JSON.parse(Buffer.from(tokens.id_token.split('.')[1], 'base64url').toString());
-    const email = (claims.email || claims.sub || '').toLowerCase();
-    const emailLocal = email.split('@')[0];
-
-    // Map the Oracle identity to an app user:
-    // 1) exact email match, 2) email local-part vs staff number, 3) sub vs staff number
-    const user = db.users.find(u =>
-      (u.email && u.email.toLowerCase() === email) ||
-      u.staffNo.toLowerCase() === emailLocal ||
-      u.staffNo.toLowerCase() === (claims.sub || '').toLowerCase()
-    );
+    const user = findUserFromClaims(claims);
 
     if (!user) {
       return res.render('login', { error: `Signed in to Oracle as "${claims.email || claims.sub}", but no matching Festival Advance account was found. Ask the administrator to map this email to a staff account.` });
@@ -207,6 +224,81 @@ app.get('/sso/callback', async (req, res) => {
   } catch (err) {
     console.error('SSO callback error:', err);
     return res.render('login', { error: 'Could not complete Oracle Cloud sign-in. Check the server logs and Oracle configuration.' });
+  }
+});
+
+// ─── SSO via Google (OpenID Connect) ───────────────────────────────────────
+// Step 1: redirect to Google's consent screen
+app.get('/sso/google', (req, res) => {
+  if (!GOOGLE.clientId) {
+    return res.render('login', { error: 'Google sign-in is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.' });
+  }
+  const state = uuidv4();
+  req.session.googleState = state;
+  const authUrl = `${GOOGLE.authUrl}?` + new URLSearchParams({
+    client_id: GOOGLE.clientId,
+    redirect_uri: GOOGLE.redirectUri,
+    response_type: 'code',
+    scope: GOOGLE.scope,
+    state,
+    access_type: 'online',
+    prompt: 'select_account',
+  }).toString();
+  return res.redirect(authUrl);
+});
+
+// Step 2: Google redirects back with a code; exchange it server-side
+app.get('/sso/google/callback', async (req, res) => {
+  const { code, state, error: gerr } = req.query;
+
+  if (gerr) return res.render('login', { error: `Google returned an error: ${gerr}` });
+  if (!state || state !== req.session.googleState) {
+    return res.render('login', { error: 'Google sign-in session expired or invalid state. Please try again.' });
+  }
+  if (!code) return res.render('login', { error: 'No authorization code returned from Google.' });
+  delete req.session.googleState;
+
+  if (!GOOGLE.clientId || !GOOGLE.clientSecret) {
+    return res.render('login', { error: 'Google sign-in is not fully configured (missing client ID or secret).' });
+  }
+
+  try {
+    const tokenResp = await fetch(GOOGLE.tokenUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: GOOGLE.clientId,
+        client_secret: GOOGLE.clientSecret,
+        redirect_uri: GOOGLE.redirectUri,
+        grant_type: 'authorization_code',
+      }),
+    });
+
+    if (!tokenResp.ok) {
+      const detail = await tokenResp.text();
+      console.error('Google token exchange failed:', tokenResp.status, detail);
+      return res.render('login', { error: `Google token exchange failed (HTTP ${tokenResp.status}). Check client ID/secret and redirect URI.` });
+    }
+
+    const tokens = await tokenResp.json();
+    if (!tokens.id_token) {
+      return res.render('login', { error: 'Google did not return an ID token. Ensure the "openid email" scopes are allowed.' });
+    }
+
+    const claims = JSON.parse(Buffer.from(tokens.id_token.split('.')[1], 'base64url').toString());
+    const user = findUserFromClaims(claims);
+
+    if (!user) {
+      return res.render('login', { error: `Signed in to Google as "${claims.email}", but no matching Festival Advance account was found. Ask the administrator to map this email to a staff account (GOOGLE_EMAIL_MAP).` });
+    }
+
+    req.session.user = user;
+    req.session.loginMethod = 'Google SSO';
+    return res.redirect('/dashboard');
+  } catch (err) {
+    console.error('Google SSO callback error:', err);
+    return res.render('login', { error: 'Could not complete Google sign-in. Check the server logs and Google configuration.' });
   }
 });
 
